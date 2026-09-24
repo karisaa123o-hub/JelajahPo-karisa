@@ -32,6 +32,14 @@ app.get('/wisata', (req, res) => {
     });
 });
 
+app.get('/kategori', (req, res) => {
+    const sql = 'SELECT * FROM kategori';
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json(results);
+    });
+});
+
 app.listen(PORT, ()=> {
     console.log(`Server JelajahPo jalan di http://localhost:${PORT}`)
 })
