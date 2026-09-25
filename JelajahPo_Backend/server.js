@@ -1,7 +1,11 @@
 const express = require('express');
+const cors = require('cors');
 const app = express()
 const PORT = 5000;
 const mysql = require('mysql2');
+
+app.use(cors ());
+app.use(express.json());
 
 const db = mysql.createConnection({
     host: 'localhost',
@@ -37,6 +41,23 @@ app.get('/kategori', (req, res) => {
     db.query(sql, (err, results) => {
         if (err) return res.status(500).json({ error: err });
         res.json(results);
+    });
+});
+
+app.post('/wisata', (req, res) => {
+    const { nama_wisata, deskripsi, harga_tiket, id_kategori } = req.body;
+
+    if (!nama_wisata || !harga_tiket) {
+        return res.status(400).json({ message: 'Nama Wisata dan harga_tiket wajib diisi' });
+    }
+
+    const sql = 'INSERT INTO wisata (nama_wisata, deskripsi, harga_tiket, id_kategori, tgl_input) VALUES (?, ?, ?, ?, NOW())';
+    db.query(sql, [nama_wisata, deskripsi, harga_tiket, id_kategori], (err, result) => {
+        if (err) return res.status(500).json({ error: err.sqlMessage });
+        res.json({
+            message: 'Wisata berhasil ditambahkan!',
+            id_wisata: result.insertId
+        });
     });
 });
 
