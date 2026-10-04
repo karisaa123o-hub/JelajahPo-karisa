@@ -36,6 +36,15 @@ app.get('/wisata', (req, res) => {
     });
 });
 
+app.get('/wisata/:id_wisata', (req, res) => {
+    const { id_wisata } = req.params;
+    const sql = 'SELECT * FROM wisata WHERE id_wisata = ?';
+    db.query(sql, [id_wisata], (err, results) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json(results);
+    });
+});
+
 app.get('/kategori', (req, res) => {
     const sql = 'SELECT * FROM kategori';
     db.query(sql, (err, results) => {
@@ -97,6 +106,37 @@ app.delete('/wisata/:id_wisata', (req, res) => {
         }
         res.json({ message: 'Wisata berhasil dihapus!' });
     });
+});
+
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+app.post('/pengguna', async (req, res) => {
+    const { nama, email, password, no_hp } = req.body;
+
+    if (!nama || !email || !password) {
+        return res.status(400).json({ message: 'Nama, email, dan password wajib diisi!' });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const sql = 'INSERT INTO pengguna (nama, email, password, no_hp) VALUES (?, ?, ?, ?)';
+        db.query(sql, [nama, email, hashedPassword, no_hp], (err, result) => {
+
+            if (err.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({
+                    message: 'Email sudah terdaftar, gunakan email lain'
+                });
+            }
+            if (err) return res.status(500).json({ error: err.sqlMessage });
+            res.json({
+                message: 'Akun berhasil dibuat!',
+                id_pengguna: result.insertId
+            });
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Gagal mengenkripsi password' });
+    }
 });
 
 app.listen(PORT, () => {
